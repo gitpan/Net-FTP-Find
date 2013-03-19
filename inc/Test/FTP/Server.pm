@@ -4,7 +4,7 @@ package Test::FTP::Server;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.012';
 
 use Carp;
 
@@ -57,7 +57,7 @@ sub new {
 
 			croak($u->{'root'} . ' is not directory.') unless -d $u->{'root'};
 			croak('"user" is required.') unless $u->{'user'};
-			croak('"pass" is not directory.') unless $u->{'pass'};
+			croak('"pass" is required.') unless $u->{'pass'};
 
 			$u->{'root'} =~ s{/+$}{};
 		}
@@ -90,4 +90,4 @@ sub run {
 1;
 __END__
 
-#line 233
+#line 243

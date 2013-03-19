@@ -3,10 +3,11 @@ package Net::FTP::Find::Mixin;
 use strict;
 use warnings;
 
-our $VERSION = '0.011';
+our $VERSION = '0.02';
 
 use Carp;
 use File::Spec;
+use File::Basename;
 
 sub import {
 	my $class = shift;
@@ -51,16 +52,18 @@ sub find {
 		croak('no &wanted subroutine given');
 	}
 
+	my $cwd = $self->pwd;
+	$cwd =~ s{/*\z}{/} if $cwd;
 
 	foreach my $d (@directories) {
-		&recursive($self, \%options, $d, 0)
+		&recursive( $self, $d =~ m!\A/! ? '' : $cwd, \%options, $d, 0 )
 			or return;
 	}
 }
 
 sub recursive {
 	my $self = shift;
-	my ($opts, $directory, $depth) = @_;
+	my ($cwd, $opts, $directory, $depth) = @_;
 
 	our (
 		$name, $dir,
@@ -78,6 +81,13 @@ sub recursive {
 		@entries = $self->dir($directory);
 		return unless @entries;
 
+		if ($depth == 0) {
+			if (! grep {((split(/\s+/, $_, 9))[8] || '') eq '.'} @entries) {
+				build_start_dir( $self, \@entries, $directory,
+					dirname($directory) );
+			}
+		}
+
 		$dir = $directory;
 	}
 	else {
@@ -90,16 +100,26 @@ sub recursive {
 		$self->cwd($directory)
 			or return;
 		@entries = $self->dir('.');
-		return unless @entries;
 
-		defined($dir = $self->pwd)
-			or return;
+		$dir = $self->pwd;
 		if ($dir) {
 			$dir =~ s{^/*}{/};
 		}
-		else {
+		elsif (defined($dir)) {
 			$dir = $directory;
 		}
+
+		if ($depth == 0) {
+			if (! grep {((split(/\s+/, $_, 9))[8] || '') eq '.'} @entries) {
+				$self->cwd('..')
+					or return;
+				build_start_dir($self, \@entries, $directory, '.');
+			}
+
+			$self->cwd($orig_cwd);
+		}
+
+		return if ! @entries || ! $directory;
 	}
 
 	my @dirs = ();
@@ -123,12 +143,14 @@ sub recursive {
 		$_ = $name if $opts->{'no_chdir'} && $depth != 0;
 		my $next = $_;
 
+		$name =~ s/$cwd// if $cwd;
+		$dir  =~ s/$cwd// if $cwd;
 
 		local ($is_directory, $is_symlink, $mode)
 			= &parse_permissions($self, $permissions);
 
 		if ($is_directory && $opts->{'bydepth'}) {
-			&recursive($self, $opts, $next, $depth+1)
+			&recursive($self, $cwd, $opts, $next, $depth+1)
 				or return;
 		}
 
@@ -152,7 +174,7 @@ sub recursive {
 		}
 
 		if ($is_directory && ! $opts->{'bydepth'}) {
-			&recursive($self, $opts, $next, $depth+1)
+			&recursive($self, $cwd, $opts, $next, $depth+1)
 				or return;
 		}
 	}
@@ -203,6 +225,44 @@ sub parse_permissions {
 	}
 
 	($type eq 'd', $type eq 'l', $mode);
+}
+
+sub build_start_dir {
+	my ($self, $entries, $current, $parent) = @_;
+
+	my $detected = 0;
+	if ($current ne '/') {
+		my @parent_entries = $self->dir($parent);
+		my $basename = basename($current);
+
+		my ($s) = grep {
+			((split(/\s+/, $_, 9))[8] || '') eq $basename
+		} @parent_entries;
+
+		if ($s) {
+			$detected = 1;
+			$s =~ s/$basename/./g;
+			splice @$entries, 0, scalar(@$entries), $s;
+		}
+	}
+
+	if (! $detected) {
+		my ($month, $mday, $hour, $min) = (localtime)[4,3,2,1];
+		my @month_name = qw(
+			Jan  Feb  Mar  Apr May Jun Jul Aug Sep Oct Nov Dec
+		);
+		splice @$entries, 0, scalar(@$entries), (join(' ',
+			'drwxr-xr-x',
+			scalar(@$entries)+2,
+			'-',
+			'-',
+			0,
+			$month_name[$month],
+			$mday,
+			$hour . ':' . $min,
+			'.'
+		));
+	}
 }
 
 1;
