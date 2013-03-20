@@ -19,8 +19,9 @@ no_index:
     - t
     - xt
 requires:
+  File::Listing: 0
   Net::FTP: 0
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/usualoma/p5-net-ftp-find.git
-version: 0.02
+version: 0.031

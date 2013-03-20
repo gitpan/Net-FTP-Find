@@ -21,6 +21,7 @@ META.yml
 README
 t/00_compile.t
 t/01_find.t
+t/01_find/testdir/0
 t/01_find/testdir/testfile.txt
 t/02_mixin.t
 t/02_mixin/testdir/testfile.txt
