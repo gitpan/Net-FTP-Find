@@ -1,5 +1,5 @@
 ---
-abstract: 'Traverse a directory tree through Net::FTP'
+abstract: 'Traverse a directory tree through Net::FTP (or Net::FTPSSL)'
 author:
   - 'Taku Amano <taku@toi-planning.net>'
 build_requires:
@@ -24,4 +24,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/usualoma/p5-net-ftp-find.git
-version: 0.034
+version: 0.040
