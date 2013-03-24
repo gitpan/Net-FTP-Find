@@ -3,7 +3,7 @@ package Net::FTP::Find;
 use strict;
 use warnings;
 
-our $VERSION = '0.040';
+our $VERSION = '0.041';
 
 use Carp;
 use File::Spec;
@@ -80,6 +80,10 @@ file found similar to the File::Find. Net::FTP::Find provides two functions,
   $ftp->finddepth(\%options, @directories);
 
 =back
+
+=head2 Return value
+
+B<find> and B<finddepth> will return "1" if getting no error, and return empty list if getting error.
 
 =head2 %options
 

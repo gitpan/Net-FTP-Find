@@ -3,7 +3,7 @@ package Net::FTP::Find::Mixin;
 use strict;
 use warnings;
 
-our $VERSION = '0.040';
+our $VERSION = '0.041';
 
 use Carp;
 use File::Spec;
@@ -506,6 +506,15 @@ or
   my $sub = Net::FTP::Subclass->new('localhost');
   $sub->login('user', 'pass');
   $sub->find(sub { ... }, '/');
+
+or
+
+  use Net::FTPSSL;
+  use Net::FTP::Find::Mixin qw( Net::FTPSSL );
+
+  my $ftp = Net::FTPSSL->new('localhost');
+  $ftp->login('user', 'pass');
+  $ftp->find(sub { ... }, '/');
 
 =head1 AUTHOR
 
